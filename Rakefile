@@ -12,10 +12,10 @@ task :test do
 end
 
 task :run do
-    ruby "-Ilib bin/txt2srt"
+    ruby "-Ilib bin/suburb"
 end
 
 task :profile do
   require 'profile'
-  ruby "-Ilib bin/txt2srt"
+  ruby "-Ilib bin/suburb"
 end

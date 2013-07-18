@@ -1,9 +1,5 @@
 
-require 'txt2srt/convert'
-
-module Txt2Srt
-
-  VERSION = '0.1'
+module Suburb
 
   class Program
 
@@ -11,7 +7,7 @@ module Txt2Srt
       @converter = Converter.new
 
       if ARGV.length == 0
-        puts "Usage: txt2srt [movie filename]"
+        puts "Usage: suburb [movie filename]"
         exit 0
       end
 

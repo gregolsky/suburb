@@ -1,6 +1,6 @@
 
 require 'suburb/subtitles'
-require 'suburb/time'
+require 'suburb/conversion'
 
 module Suburb
 
@@ -30,13 +30,13 @@ module Suburb
     end
 
     def parse
-      lines = @io.readlines.map { |line| transform_line_to_subline(line) }
-      build_subtitles(lines)
+      lines = @io.readlines.each_with_index.map { |line, i| transform_line_to_subline(line, i) }
+      build_subtitles(lines.compact)
     end
 
     protected
 
-    def transform_line_to_subline(line)
+    def transform_line_to_subline(line, index)
       raise 'Not implemented'
     end
 
@@ -50,9 +50,10 @@ module Suburb
 
     def initialize(io, filename, encoding)
       super(io, filename, encoding)
+      @framerate = nil
     end
 
-    def transform_line_to_subline(line)
+    def transform_line_to_subline(line, index)
       m = line.match(/^{(\d+)}{(\d+)}(.*)$/)
 
       if m.nil? or m.length != 4
@@ -60,11 +61,24 @@ module Suburb
       end 
       
       start_signature, end_signature, text = m[1].to_i, m[2].to_i, m[3].strip.split('|')
+
+      if index == 0 and not text.nil? and text.length > 0
+        rate_parsed = text[0].to_f
+        if rate_parsed != 0
+          @framerate = rate_parsed 
+          return
+        end
+      end
+
       SubLine.new(start_signature, end_signature, text)
     end
 
     def get_format
       SubFormat::MICRO_DVD
+    end
+
+    def build_subtitles(lines)
+      Subtitles.new(lines, @encoding, get_format, @framerate)
     end
 
   end
@@ -75,7 +89,7 @@ module Suburb
       super(io, filename, encoding)
     end
 
-    def transform_line_to_subline(line)
+    def transform_line_to_subline(line, index)
       m = line.match(/^(\d+):(\d+):(\d+)[ :](.*)$/)
 
       if m.nil? or m.length != 5
@@ -83,7 +97,7 @@ module Suburb
       end 
       
       hour, minute, seconds, text = m[1].to_i, m[2].to_i, m[3].to_i, m[3].strip.split('|')
-      milliseconds = Suburb::TimeConverter.convert_to_milliseconds(seconds, minute, hour)
+      milliseconds = Suburb::TimeConverter.to_milliseconds(seconds, minute, hour)
       SubLine.new(milliseconds, nil, text)
     end
 
@@ -99,7 +113,7 @@ module Suburb
       super(io, filename, encoding)
     end
 
-    def transform_line_to_subline(line)
+    def transform_line_to_subline(line, index)
       m = line.match(/^\[(\d+)\]\[(\d+)\](.*)$/)
 
       if m.nil? or m.length != 4
@@ -175,10 +189,10 @@ module Suburb
         raise SubParsingError.new("Invalid subtitles format: #{line}")
       end 
 
-      sigStartHour, sigStartMin, sigStartSec, sigStartMilli = m[1].to_i, m[2].to_i, m[3].to_i, m[4].to_i
-      sigEndHour, sigEndMin, sigEndSec, sigEndMilli = m[5].to_i, m[6].to_i, m[7].to_i, m[8].to_i
-      sigStart = Suburb::TimeConverter.convert_to_milliseconds(sigStartSec, sigStartMin, sigStartHour) + sigStartMilli
-      sigEnd = Suburb::TimeConverter.convert_to_milliseconds(sigEndSec, sigEndMin, sigEndHour) + sigEndMilli
+      sigStartHour, sigStartMin, sigStartSec, sigStartMilli = m[1, 4].map { |x| x.to_i }
+      sigEndHour, sigEndMin, sigEndSec, sigEndMilli = m[5, 8].map { |x| x.to_i }
+      sigStart = Suburb::TimeConverter.to_milliseconds(sigStartSec, sigStartMin, sigStartHour) + sigStartMilli
+      sigEnd = Suburb::TimeConverter.to_milliseconds(sigEndSec, sigEndMin, sigEndHour) + sigEndMilli
       [ sigStart, sigEnd ]
     end
 
