@@ -1,13 +1,19 @@
 
+require 'suburb/commands'
+require 'suburb/config'
+require 'suburb/errors'
+
 module Suburb
 
   class Program
 
     def initialize
-      @converter = Converter.new
+
+      cfg = SuburbConfig.new
+      @options = CommandLineOptions.create(cfg)
 
       if ARGV.length == 0
-        puts "Usage: suburb [movie filename]"
+        puts "Movie filename missing."
         exit 0
       end
 
@@ -15,7 +21,9 @@ module Suburb
     end
 
     def run
-      @filenames.each { |filename| @converter.convert filename }
+      ConvertFilesCommand.new(@filenames, @options).execute
+    rescue SuburbError => error
+      puts error.message
     end
 
   end

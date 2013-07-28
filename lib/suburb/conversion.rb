@@ -21,7 +21,7 @@ module Suburb
   end
 
   class FramesConverter
-#23.976216
+
     KNOWN_FRAMERATES = [ 23.976216, 25.0 ]
 
     def self.to_milliseconds(frame, framerate)

@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'txt2srt'
+require 'suburb'
 
-Txt2Srt::Program.new.run
+Suburb::Program.new.run
