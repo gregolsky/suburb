@@ -25,8 +25,8 @@ module Suburb
     end
   
     def load_subtitles(bundle)
-      source_encoding, target_encoding = @options[:source_encoding], @options[:target_encoding]
-      File.open(bundle.subtitles_filename, "r:#{source_encoding}:#{target_encoding}") do |io|
+      source_encoding = @options[:source_encoding]
+      File.open(bundle.subtitles_filename, "r:#{source_encoding}:UTF-8") do |io|
         subtitles = Parse::SubtitlesLoader.load(io, bundle.subtitles_filename, source_encoding)
         framerate = Video.get_framerate bundle.movie_filename
         subtitles.apply_framerate framerate
